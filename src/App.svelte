@@ -1,6 +1,8 @@
 <script>
   import { onMount } from 'svelte';
   import Letter from './Letter.svelte';
+  import Navbar from './Navbar.svelte';
+  import Keyboard from './Keyboard.svelte';
 
   const word = 'again'.split('');
   const vacant = '';
@@ -11,14 +13,13 @@
       ? parseInt(localStorage.getItem(ATTEMPT))
       : 0;
   let currentPosition = 0;
-  let guesses = new Array(5)
+  let guesses = new Array(6)
     .fill()
     .map(() => new Array(5).fill({ letter: vacant, state: 'in-progress' }));
 
   onMount(() => {
     if (localStorage.getItem(GUESSES) !== null) {
       guesses = createArrayFromJSON(JSON.parse(localStorage.getItem(GUESSES)));
-      attempt = parseInt(localStorage.getItem(ATTEMPT));
     } else {
       localStorage.setItem(
         GUESSES,
@@ -95,6 +96,7 @@
 <svelte:window on:keydown={handleKeydown} />
 
 <main>
+  <Navbar />
   <div class="container">
     {#each guesses as word}
       <div class="squares-container">
@@ -105,20 +107,27 @@
     {/each}
     <button on:click={checkWord}>Submit</button>
   </div>
+  <Keyboard />
 </main>
 
 <style>
   main {
     background-color: black;
     height: 100vh;
-    display: flex;
-    justify-content: center;
   }
 
   .squares-container {
     display: flex;
     justify-content: space-around;
-    width: 400px;
+    width: 350px;
     margin: 10px 0;
+  }
+
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-top: 2rem;
   }
 </style>

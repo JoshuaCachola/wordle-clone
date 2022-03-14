@@ -11,13 +11,13 @@
 
 <style>
   .square {
-    width: 75px;
-    height: 75px;
+    width: 60px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-color: grey;
-    border-width: 5px;
+    border-width: 3px;
     border-style: solid;
   }
 
@@ -26,19 +26,19 @@
   }
 
   .hit {
-    background-color: green;
+    background-color: rgb(81, 157, 109);
   }
 
   .miss {
-    background-color: red;
+    background-color: grey;
   }
 
   .in-word {
-    background-color: yellow;
+    background-color: rgb(212, 223, 85);
   }
 
   .letter {
-    font-size: 36px;
+    font-size: 28px;
     font-weight: 800;
     color: white;
   }
