@@ -30,7 +30,7 @@
   }
 
   .miss {
-    background-color: grey;
+    background-color: rgb(52, 47, 47);
   }
 
   .in-word {

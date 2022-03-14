@@ -8,14 +8,22 @@
   const vacant = '';
   const GUESSES = 'GUESSES';
   const ATTEMPT = 'ATTEMPT';
+  const KEYS = 'KEYS';
+
   let attemptNumber =
     localStorage.getItem(ATTEMPT) !== null
       ? parseInt(localStorage.getItem(ATTEMPT))
       : 0;
+
   let currentPosition = 0;
   let guesses = new Array(6)
     .fill()
     .map(() => new Array(5).fill({ letter: vacant, state: 'in-progress' }));
+  let keysState =
+    localStorage.getItem(KEYS) !== null
+      ? JSON.parse(localStorage.getItem(KEYS))
+      : {};
+  $: currentAttempt = guesses[attemptNumber];
 
   onMount(() => {
     if (localStorage.getItem(GUESSES) !== null) {
@@ -28,6 +36,10 @@
       localStorage.setItem(ATTEMPT, 0);
     }
   });
+
+  function updateKeys() {
+    currentAttempt.forEach(({ letter, state }) => (keysState[letter] = state));
+  }
 
   function createArrayFromJSON(json) {
     const guessArray = [];
@@ -43,30 +55,47 @@
     return obj;
   }
 
-  function handleKeydown(e) {
-    const currentAttempt = guesses[attemptNumber];
-    if (e.keyCode === 8 && currentPosition > 0) {
-      if (currentAttempt[currentPosition].letter === vacant) {
-        currentPosition--;
-      }
+  function vacantLetter() {
+    if (currentPosition >= 0) {
       currentAttempt[currentPosition] = {
         ...currentAttempt[currentPosition],
         letter: vacant,
       };
-    } else if (e.keyCode >= 65 && e.keyCode <= 90) {
-      if (
-        currentPosition === 4 &&
-        currentAttempt[currentPosition].letter !== vacant
-      ) {
-        return;
-      }
-      currentAttempt[currentPosition] = {
-        ...currentAttempt[currentPosition],
-        letter: e.key,
-      };
-      if (currentPosition < 4) currentPosition++;
     }
+
     guesses = guesses;
+  }
+
+  function addLetter(letter) {
+    if (
+      currentPosition === 4 &&
+      currentAttempt[currentPosition].letter !== vacant
+    ) {
+      return;
+    }
+    currentAttempt[currentPosition] = {
+      ...currentAttempt[currentPosition],
+      letter,
+    };
+
+    if (currentPosition < 4) currentPosition++;
+    guesses = guesses;
+  }
+
+  function handleKeydown(e) {
+    if (e.keyCode === 8) {
+      if (
+        currentAttempt[currentPosition].letter === vacant &&
+        currentPosition > 0
+      ) {
+        currentPosition--;
+      }
+      vacantLetter();
+    } else if (e.keyCode >= 65 && e.keyCode <= 90) {
+      addLetter(e.key);
+    } else if (e.keyCode === 13) {
+      checkWord();
+    }
   }
 
   function checkWord() {
@@ -86,10 +115,31 @@
     });
 
     guesses[attemptNumber] = [...guessResult];
+    updateKeys(keysState);
+    console.log(keysState);
+    localStorage.setItem(KEYS, JSON.stringify(keysState));
     localStorage.setItem(GUESSES, JSON.stringify(createJSONFromArray(guesses)));
     attemptNumber++;
     localStorage.setItem(ATTEMPT, attemptNumber);
     currentPosition = 0;
+  }
+
+  function handleKeyPress(e) {
+    const key = e.detail.key;
+    if (key === undefined) return;
+    if (key === 'Delete') {
+      if (
+        currentAttempt[currentPosition].letter === vacant &&
+        currentPosition > 0
+      ) {
+        currentPosition--;
+      }
+      vacantLetter();
+    } else if (key === 'Enter') {
+      checkWord();
+    } else {
+      addLetter(key.toLowerCase());
+    }
   }
 </script>
 
@@ -107,7 +157,7 @@
     {/each}
     <button on:click={checkWord}>Submit</button>
   </div>
-  <Keyboard />
+  <Keyboard on:keyPress={handleKeyPress} {keysState} />
 </main>
 
 <style>
