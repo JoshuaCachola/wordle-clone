@@ -1,11 +1,22 @@
 <script>
+  import { onMount } from 'svelte';
   import Letter from './Letter.svelte';
 
   const word = 'again'.split('');
   const vacant = '';
+  const GUESSES = 'GUESSES';
   let guesses = new Array(5)
     .fill()
     .map(() => new Array(5).fill({ letter: vacant, state: 'in-progress' }));
+
+  onMount(() => {
+    if (localStorage.getItem(GUESSES)) {
+      guesses = JSON.parse(localStorage.getItem(GUESSES));
+    } else {
+      localStorage.setItem(GUESSES, JSON.stringify(guesses));
+    }
+  });
+
   let attemptNumber = 0;
   let currentPosition = 0;
 
@@ -53,6 +64,7 @@
     });
 
     guesses[attemptNumber] = [...guessResult];
+    localStorage.setItem(GUESSES, JSON.stringify(guesses));
     attemptNumber++;
     currentPosition = 0;
   }
