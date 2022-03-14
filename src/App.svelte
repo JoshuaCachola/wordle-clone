@@ -5,20 +5,42 @@
   const word = 'again'.split('');
   const vacant = '';
   const GUESSES = 'GUESSES';
+  const ATTEMPT = 'ATTEMPT';
+  let attemptNumber =
+    localStorage.getItem(ATTEMPT) !== null
+      ? parseInt(localStorage.getItem(ATTEMPT))
+      : 0;
+  let currentPosition = 0;
   let guesses = new Array(5)
     .fill()
     .map(() => new Array(5).fill({ letter: vacant, state: 'in-progress' }));
 
   onMount(() => {
-    if (localStorage.getItem(GUESSES)) {
-      guesses = JSON.parse(localStorage.getItem(GUESSES));
+    if (localStorage.getItem(GUESSES) !== null) {
+      guesses = createArrayFromJSON(JSON.parse(localStorage.getItem(GUESSES)));
+      attempt = parseInt(localStorage.getItem(ATTEMPT));
     } else {
-      localStorage.setItem(GUESSES, JSON.stringify(guesses));
+      localStorage.setItem(
+        GUESSES,
+        JSON.stringify(createJSONFromArray(guesses))
+      );
+      localStorage.setItem(ATTEMPT, 0);
     }
   });
 
-  let attemptNumber = 0;
-  let currentPosition = 0;
+  function createArrayFromJSON(json) {
+    const guessArray = [];
+    Object.values(json).forEach((attempt) => guessArray.push(attempt));
+    return guessArray;
+  }
+
+  function createJSONFromArray(array) {
+    const obj = {};
+    array.forEach((attempt, idx) => {
+      obj[idx] = attempt;
+    });
+    return obj;
+  }
 
   function handleKeydown(e) {
     const currentAttempt = guesses[attemptNumber];
@@ -43,7 +65,6 @@
       };
       if (currentPosition < 4) currentPosition++;
     }
-    console.log(guesses);
     guesses = guesses;
   }
 
@@ -64,8 +85,9 @@
     });
 
     guesses[attemptNumber] = [...guessResult];
-    localStorage.setItem(GUESSES, JSON.stringify(guesses));
+    localStorage.setItem(GUESSES, JSON.stringify(createJSONFromArray(guesses)));
     attemptNumber++;
+    localStorage.setItem(ATTEMPT, attemptNumber);
     currentPosition = 0;
   }
 </script>
