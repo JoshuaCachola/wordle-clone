@@ -1,54 +1,75 @@
 <script>
-  let word = 'again'.split('');
-  let guesses = new Array(5).fill().map(() => new Array(5).fill(''));
-  // let guesses = [
-  //   ['', '', '', '', ''],
-  //   ['', '', '', '', ''],
-  //   ['', '', '', '', ''],
-  //   ['', '', '', '', ''],
-  //   ['', '', '', '', ''],
-  // ];
+  import Letter from './Letter.svelte';
+
+  const word = 'again'.split('');
+  const vacant = '';
+  let guesses = new Array(5)
+    .fill()
+    .map(() => new Array(5).fill({ letter: vacant, state: 'in-progress' }));
   let attemptNumber = 0;
   let currentPosition = 0;
 
   function handleKeydown(e) {
     const currentAttempt = guesses[attemptNumber];
-
-    if (e.keyCode === 8 && currentPosition >= 0) {
-      if (currentAttempt[currentPosition] !== '') {
-        currentAttempt[currentPosition] = '';
-      } else {
+    if (e.keyCode === 8 && currentPosition > 0) {
+      if (currentAttempt[currentPosition].letter === vacant) {
         currentPosition--;
-        currentAttempt[currentPosition] = '';
       }
+      currentAttempt[currentPosition] = {
+        ...currentAttempt[currentPosition],
+        letter: vacant,
+      };
     } else if (e.keyCode >= 65 && e.keyCode <= 90) {
-      if (currentPosition === 4 && currentAttempt[currentPosition] !== '') {
+      if (
+        currentPosition === 4 &&
+        currentAttempt[currentPosition].letter !== vacant
+      ) {
         return;
       }
-      const letter = e.key;
-      currentAttempt[currentPosition] = letter.toUpperCase();
+      currentAttempt[currentPosition] = {
+        ...currentAttempt[currentPosition],
+        letter: e.key,
+      };
       if (currentPosition < 4) currentPosition++;
     }
-
+    console.log(guesses);
     guesses = guesses;
+  }
+
+  function checkWord() {
+    // checks for incomplete attempt
+    if (guesses[attemptNumber][word.length - 1].letter === vacant) return;
+
+    const wordSet = new Set(word);
+    const guessResult = guesses[attemptNumber];
+    guessResult.map((letterObj, idx) => {
+      if (word[idx] === letterObj.letter) {
+        letterObj.state = 'hit';
+      } else if (wordSet.has(letterObj.letter)) {
+        letterObj.state = 'in-word';
+      } else {
+        letterObj.state = 'miss';
+      }
+    });
+
+    guesses[attemptNumber] = [...guessResult];
+    attemptNumber++;
+    currentPosition = 0;
   }
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
 
 <main>
-  <!-- <h1>Worduhl</h1> -->
   <div class="container">
     {#each guesses as word}
       <div class="squares-container">
-        {#each word as letter}
-          <div class="square">
-            <kbd class="letter">{letter}</kbd>
-          </div>
+        {#each word as letterObj}
+          <Letter letter={letterObj.letter} state={letterObj.state} />
         {/each}
       </div>
     {/each}
-    <!-- <button on:submit={checkWord}>Submit</button> -->
+    <button on:click={checkWord}>Submit</button>
   </div>
 </main>
 
@@ -63,24 +84,7 @@
   .squares-container {
     display: flex;
     justify-content: space-around;
-    width: 600px;
-  }
-
-  .square {
-    width: 75px;
-    height: 75px;
-    background-color: black;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-color: grey;
-    border-width: 5px;
-    border-style: solid;
-  }
-
-  .letter {
-    font-size: 36px;
-    font-weight: 800;
-    color: white;
+    width: 400px;
+    margin: 10px 0;
   }
 </style>
