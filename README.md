@@ -20,7 +20,8 @@ Every **FIVE** minutes a new puzzle is generated from the server.
 
 ### Task list
 
-[] - update styling
-[] - clean up local storage
-[] - how to play page
-[] - track statistics
+- [] - update styling
+- [] - add media queries
+- [] - clean up local storage
+- [] - how to play page
+- [] - track statistics
