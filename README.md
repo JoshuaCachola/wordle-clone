@@ -1,5 +1,9 @@
 # Wordle
 
+## [Live](https://wordle-clone-delta.vercel.app/)
+
+### Hosted with Vercel
+
 ### How to play?
 
 Player will have six attempts to solve the wordle.
@@ -20,18 +24,3 @@ Every **FIVE** minutes a new puzzle is generated from the server.
 [] - clean up local storage
 [] - how to play page
 [] - track statistics
-
-### With [Vercel](https://vercel.com)
-
-Install `vercel` if you haven't already:
-
-```bash
-npm install -g vercel
-```
-
-Then, from within your project folder:
-
-```bash
-cd public
-vercel deploy --name my-project
-```
