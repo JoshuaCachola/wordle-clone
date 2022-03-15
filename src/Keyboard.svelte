@@ -11,6 +11,7 @@
     ['Enter', 'z', 'x', 'c', 'v', 'b', 'n', 'm', 'Delete'],
   ];
 
+  // event forwarding key click from Key component
   function forward(e) {
     dispatch('keyPress', e.detail);
   }

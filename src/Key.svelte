@@ -6,7 +6,10 @@
 
   const dispatch = createEventDispatcher();
 
+  // reactive variable for css class
   $: size = key === 'Enter' || key === 'Delete' ? 'large' : 'small';
+
+  // event dispatcher
   function handleKeyPress(e) {
     dispatch('keyPress', { key: e.originalTarget.firstChild.data });
   }

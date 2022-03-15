@@ -5,40 +5,52 @@
   import Keyboard from './Keyboard.svelte';
   import Summary from './Summary.svelte';
 
-  let word = updateWord();
-  const vacant = '';
+  // Constants
+  const VACANT = '';
   const GUESSES = 'GUESSES';
   const ATTEMPT = 'ATTEMPT';
   const KEYS = 'KEYS';
-  let attemptNumber =
-    localStorage.getItem(ATTEMPT) !== null
-      ? parseInt(localStorage.getItem(ATTEMPT))
-      : 0;
+  const ANSWER = 'ANSWER';
 
+  // Initial state of variables
+  let word = '';
+  let attemptNumber = 0;
   let currentPosition = 0;
   let guesses = new Array(6)
     .fill()
-    .map(() => new Array(5).fill({ letter: vacant, state: 'in-progress' }));
-  let keysState =
-    localStorage.getItem(KEYS) !== null
-      ? JSON.parse(localStorage.getItem(KEYS))
-      : {};
+    .map(() => new Array(5).fill({ letter: VACANT, state: 'in-progress' }));
+  let keysState = {};
 
+  // Reactive variables
   $: currentAttempt = guesses[attemptNumber];
   $: isFinished = attemptNumber === 6 || doesPreviousAttemptMatchWord();
 
+  // When component mounts check if there is a word in local storage
+  // check if word matches the word from the server
+  // if it does then pull state from local storage
+  // else reset local storage
   onMount(async () => {
-    if (localStorage.getItem(GUESSES) !== null) {
-      guesses = createArrayFromJSON(JSON.parse(localStorage.getItem(GUESSES)));
-    } else {
+    const currentWord = await getWord();
+    if (
+      localStorage.getItem(ANSWER) === null ||
+      localStorage.getItem(ANSWER) !== currentWord
+    ) {
       localStorage.setItem(
         GUESSES,
         JSON.stringify(createJSONFromArray(guesses))
       );
       localStorage.setItem(ATTEMPT, 0);
+      localStorage.setItem(ANSWER, currentWord);
+      localStorage.setItem(KEYS, JSON.stringify(keysState));
+    } else {
+      guesses = createArrayFromJSON(JSON.parse(localStorage.getItem(GUESSES)));
+      keysState = JSON.parse(localStorage.getItem(KEYS));
+      attemptNumber = localStorage.getItem(ATTEMPT);
     }
+    word = currentWord;
   });
 
+  // loop to compare the previous attempt matches word
   function doesPreviousAttemptMatchWord() {
     if (attemptNumber === 0) return false;
     const guess = guesses[attemptNumber - 1];
@@ -49,22 +61,26 @@
     return true;
   }
 
-  async function updateWord() {
+  // gets word from server
+  async function getWord() {
     const res = await fetch('http://localhost:4321/');
     const data = await res.json();
-    word = data.word;
+    return data.word;
   }
 
+  // updates the state of the keys in Keyboard component
   function updateKeys() {
     currentAttempt.forEach(({ letter, state }) => (keysState[letter] = state));
   }
 
+  // creates nested array from json
   function createArrayFromJSON(json) {
     const guessArray = [];
     Object.values(json).forEach((attempt) => guessArray.push(attempt));
     return guessArray;
   }
 
+  // creates json with index as keys for the nested array
   function createJSONFromArray(array) {
     const obj = {};
     array.forEach((attempt, idx) => {
@@ -73,21 +89,25 @@
     return obj;
   }
 
+  // removes a letter when clicking the on screen delete button
+  // or pressing delete on keyboard
   function vacantLetter() {
     if (currentPosition >= 0) {
       currentAttempt[currentPosition] = {
         ...currentAttempt[currentPosition],
-        letter: vacant,
+        letter: VACANT,
       };
     }
 
     guesses = guesses;
   }
 
+  // adds a letter if current position is < 5
+  // increases position if current position < 4
   function addLetter(letter) {
     if (
       currentPosition === 4 &&
-      currentAttempt[currentPosition].letter !== vacant
+      currentAttempt[currentPosition].letter !== VACANT
     ) {
       return;
     }
@@ -100,11 +120,12 @@
     guesses = guesses;
   }
 
+  // handler for key presses on keyboard
   function handleKeydown(e) {
     if (isFinished) return;
     if (e.keyCode === 8) {
       if (
-        currentAttempt[currentPosition].letter === vacant &&
+        currentAttempt[currentPosition].letter === VACANT &&
         currentPosition > 0
       ) {
         currentPosition--;
@@ -117,20 +138,14 @@
     }
   }
 
-  // const animateSquare = () => {
-  //   return {
-  //     css: (t) => {
-  //       return `
-  // 				transform:
-  // 			`;
-  //     },
-  //     duration: 1000,
-  //   };
-  // };
-
+  // updates keysState object with different states
+  // 	'hit' - correct letter and correct spot
+  //	'in-word' - correct letter, wrong spot
+  //	'miss' - letter not in word
+  //  'in-progress' - default state
   function checkWord() {
     // checks for incomplete attempt
-    if (guesses[attemptNumber][word.length - 1].letter === vacant) return;
+    if (guesses[attemptNumber][word.length - 1].letter === VACANT) return;
 
     const wordSet = new Set(word);
     const guessResult = guesses[attemptNumber];
@@ -145,7 +160,6 @@
     });
 
     guesses[attemptNumber] = [...guessResult];
-    // animateSquare();
     updateKeys(keysState);
     attemptNumber++;
     currentPosition = 0;
@@ -154,6 +168,7 @@
     localStorage.setItem(ATTEMPT, attemptNumber);
   }
 
+  // handler for on screen keyboard clicks
   function handleKeyPress(e) {
     if (key === undefined || isFinished) return;
 
@@ -161,7 +176,7 @@
 
     if (key === 'Delete') {
       if (
-        currentAttempt[currentPosition].letter === vacant &&
+        currentAttempt[currentPosition].letter === VACANT &&
         currentPosition > 0
       ) {
         currentPosition--;
@@ -181,7 +196,10 @@
   <Navbar />
   <div class="container">
     {#if isFinished}
-      <Summary />
+      <Summary
+        isSolved={doesPreviousAttemptMatchWord()}
+        attempts={attemptNumber}
+      />
     {/if}
     {#each guesses as word}
       <div class="squares-container">
@@ -190,7 +208,6 @@
         {/each}
       </div>
     {/each}
-    <button on:click={checkWord}>Submit</button>
   </div>
   <Keyboard on:keyPress={handleKeyPress} {keysState} />
 </main>
@@ -213,6 +230,6 @@
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    margin-top: 2rem;
+    margin: 2rem 0;
   }
 </style>
