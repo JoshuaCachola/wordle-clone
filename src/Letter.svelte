@@ -5,7 +5,7 @@
 
 <div class="square {state}">
   <kbd class="letter">
-    {letter.toUpperCase()}
+    {letter}
   </kbd>
 </div>
 
@@ -41,5 +41,6 @@
     font-size: 28px;
     font-weight: 800;
     color: white;
+    text-transform: uppercase;
   }
 </style>

@@ -6,18 +6,18 @@
 
   const dispatch = createEventDispatcher();
 
+  $: size = key === 'Enter' || key === 'Delete' ? 'large' : 'small';
   function handleKeyPress(e) {
     dispatch('keyPress', { key: e.originalTarget.firstChild.data });
   }
 </script>
 
-<div class="container {state}" on:click={handleKeyPress}>
+<div class="container {state} {size}" on:click={handleKeyPress}>
   {key}
 </div>
 
 <style>
   .container {
-    width: 50px;
     height: 55px;
     border-radius: 2px;
     background-color: grey;
@@ -28,6 +28,15 @@
     cursor: pointer;
     color: white;
     font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .small {
+    width: 50px;
+  }
+
+  .large {
+    width: 80px;
   }
 
   .in-progress {

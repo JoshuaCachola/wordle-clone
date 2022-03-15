@@ -3,8 +3,9 @@
   import Letter from './Letter.svelte';
   import Navbar from './Navbar.svelte';
   import Keyboard from './Keyboard.svelte';
+  import Summary from './Summary.svelte';
 
-  const word = 'again'.split('');
+  let word;
   const vacant = '';
   const GUESSES = 'GUESSES';
   const ATTEMPT = 'ATTEMPT';
@@ -25,7 +26,7 @@
       : {};
   $: currentAttempt = guesses[attemptNumber];
 
-  onMount(() => {
+  onMount(async () => {
     if (localStorage.getItem(GUESSES) !== null) {
       guesses = createArrayFromJSON(JSON.parse(localStorage.getItem(GUESSES)));
     } else {
@@ -35,7 +36,14 @@
       );
       localStorage.setItem(ATTEMPT, 0);
     }
+    updateWord();
   });
+
+  async function updateWord() {
+    const res = await fetch('http://localhost:4321/');
+    const data = await res.json();
+    word = data.word;
+  }
 
   function updateKeys() {
     currentAttempt.forEach(({ letter, state }) => (keysState[letter] = state));
@@ -98,6 +106,17 @@
     }
   }
 
+  // const animateSquare = () => {
+  //   return {
+  //     css: (t) => {
+  //       return `
+  // 				transform:
+  // 			`;
+  //     },
+  //     duration: 1000,
+  //   };
+  // };
+
   function checkWord() {
     // checks for incomplete attempt
     if (guesses[attemptNumber][word.length - 1].letter === vacant) return;
@@ -115,13 +134,13 @@
     });
 
     guesses[attemptNumber] = [...guessResult];
+    animateSquare();
     updateKeys(keysState);
-    console.log(keysState);
+    attemptNumber++;
+    currentPosition = 0;
     localStorage.setItem(KEYS, JSON.stringify(keysState));
     localStorage.setItem(GUESSES, JSON.stringify(createJSONFromArray(guesses)));
-    attemptNumber++;
     localStorage.setItem(ATTEMPT, attemptNumber);
-    currentPosition = 0;
   }
 
   function handleKeyPress(e) {
@@ -148,6 +167,7 @@
 <main>
   <Navbar />
   <div class="container">
+    <Summary />
     {#each guesses as word}
       <div class="squares-container">
         {#each word as letterObj}
