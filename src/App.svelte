@@ -5,12 +5,11 @@
   import Keyboard from './Keyboard.svelte';
   import Summary from './Summary.svelte';
 
-  let word;
+  let word = updateWord();
   const vacant = '';
   const GUESSES = 'GUESSES';
   const ATTEMPT = 'ATTEMPT';
   const KEYS = 'KEYS';
-
   let attemptNumber =
     localStorage.getItem(ATTEMPT) !== null
       ? parseInt(localStorage.getItem(ATTEMPT))
@@ -24,7 +23,9 @@
     localStorage.getItem(KEYS) !== null
       ? JSON.parse(localStorage.getItem(KEYS))
       : {};
+
   $: currentAttempt = guesses[attemptNumber];
+  $: isFinished = attemptNumber === 6 || doesPreviousAttemptMatchWord();
 
   onMount(async () => {
     if (localStorage.getItem(GUESSES) !== null) {
@@ -36,8 +37,17 @@
       );
       localStorage.setItem(ATTEMPT, 0);
     }
-    updateWord();
   });
+
+  function doesPreviousAttemptMatchWord() {
+    if (attemptNumber === 0) return false;
+    const guess = guesses[attemptNumber - 1];
+    for (let i = 0; i < guess.length; i++) {
+      if (word[i] !== guess[i].letter) return false;
+    }
+
+    return true;
+  }
 
   async function updateWord() {
     const res = await fetch('http://localhost:4321/');
@@ -91,6 +101,7 @@
   }
 
   function handleKeydown(e) {
+    if (isFinished) return;
     if (e.keyCode === 8) {
       if (
         currentAttempt[currentPosition].letter === vacant &&
@@ -134,7 +145,7 @@
     });
 
     guesses[attemptNumber] = [...guessResult];
-    animateSquare();
+    // animateSquare();
     updateKeys(keysState);
     attemptNumber++;
     currentPosition = 0;
@@ -144,8 +155,10 @@
   }
 
   function handleKeyPress(e) {
+    if (key === undefined || isFinished) return;
+
     const key = e.detail.key;
-    if (key === undefined) return;
+
     if (key === 'Delete') {
       if (
         currentAttempt[currentPosition].letter === vacant &&
@@ -167,7 +180,9 @@
 <main>
   <Navbar />
   <div class="container">
-    <Summary />
+    {#if isFinished}
+      <Summary />
+    {/if}
     {#each guesses as word}
       <div class="squares-container">
         {#each word as letterObj}
